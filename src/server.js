@@ -7,19 +7,19 @@ import logger from "./utils/logger.js";
 
 const PORT = process.env.PORT || 8888;
 
-const startServer = async () => {
-  try {
-    await connectDB();
+// 1. Establish the database connection globally (Vercel caches this connection across invocations)
+connectDB()
+  .then(() => logger.info("Database connection initialized successfully."))
+  .catch((error) => {
+    logger.error(`Database initialization failed: ${error.message}`);
+  });
 
-    app.listen(PORT, () => {
-      logger.info(
-        `Server running on http://localhost:${PORT}`
-      );
-    });
-  } catch (error) {
-    logger.error(error.message);
-    process.exit(1);
-  }
-};
+// 2. Conditionally call listen() only for local development 
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    logger.info(`Server running on http://localhost:${PORT}`);
+  });
+}
 
-startServer();
+// 3. Export the Express app instance for Vercel's serverless handler
+export default app;
